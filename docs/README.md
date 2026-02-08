@@ -132,9 +132,10 @@ This system is a legacy COBOL-based account management application designed to m
    - Balance is maintained in memory during program execution
 
 2. **Credit Transactions**
-   - No maximum limit on credit amounts
+   - **Maximum transaction amount:** $9,999.99 per transaction
+   - **Maximum account balance:** $999,999.99
    - Credits are immediately reflected in the account balance
-   - No validation on credit amount (accepts any positive number)
+   - Credits that would cause the balance to exceed $999,999.99 are rejected
 
 3. **Debit Transactions**
    - **Overdraft Protection:** Debits cannot exceed the current balance

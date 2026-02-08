@@ -69,9 +69,19 @@ class Operations {
    */
   credit(amount) {
     const currentBalance = this.dataProgram.read();
-    const newBalance = currentBalance + amount;
+    
+    // Round to 2 decimal places to avoid floating point artifacts
+    const newBalance = Math.round((currentBalance + amount) * 100) / 100;
+    
+    // Business Rule: Maximum balance limit is 999,999.99
+    if (newBalance > 999999.99) {
+      console.log('Credit rejected. Balance would exceed maximum allowed (999,999.99).');
+      return false;
+    }
+    
     this.dataProgram.write(newBalance);
     console.log(`Amount credited. New balance: ${newBalance.toFixed(2)}`);
+    return true;
   }
 
   /**
@@ -86,7 +96,8 @@ class Operations {
     
     // Business Rule: Overdraft Protection
     if (currentBalance >= amount) {
-      const newBalance = currentBalance - amount;
+      // Round to 2 decimal places to avoid floating point artifacts
+      const newBalance = Math.round((currentBalance - amount) * 100) / 100;
       this.dataProgram.write(newBalance);
       console.log(`Amount debited. New balance: ${newBalance.toFixed(2)}`);
       return true;
@@ -127,7 +138,7 @@ class MainProgram {
    * @param {string} promptMessage - Message to display
    * @returns {Promise<number>} Amount entered by user
    */
-  promptForAmount(promptMessage) {
+  async promptForAmount(promptMessage) {
     // Ensure readline interface exists
     if (!rl) {
       rl = readline.createInterface({
@@ -136,25 +147,28 @@ class MainProgram {
       });
     }
     
-    return new Promise((resolve) => {
-      rl.question(promptMessage, (input) => {
-        const amount = parseFloat(input);
-        
-        // Validate input is a positive number
-        if (isNaN(amount) || amount < 0) {
-          console.log('Invalid amount. Please enter a valid positive number.');
-          this.promptForAmount(promptMessage).then(resolve);
-        } else {
-          // Business Rule: Maximum transaction amount per docs/README.md and TC-014 = 9,999.99
-          if (amount > 9999.99) {
-            console.log('Amount exceeds maximum allowed (9,999.99).');
-            this.promptForAmount(promptMessage).then(resolve);
-          } else {
-            resolve(amount);
-          }
-        }
+    // Use a loop instead of recursion to avoid building up Promise chains
+    while (true) {
+      const input = await new Promise((resolve) => {
+        rl.question(promptMessage, resolve);
       });
-    });
+      
+      const amount = parseFloat(input);
+      
+      // Validate input is a non-negative number
+      if (isNaN(amount) || amount < 0) {
+        console.log('Invalid amount. Please enter a valid non-negative number.');
+        continue;
+      }
+      
+      // Business Rule: Maximum transaction amount per docs/README.md and TC-014 = 9,999.99
+      if (amount > 9999.99) {
+        console.log('Amount exceeds maximum allowed (9,999.99).');
+        continue;
+      }
+      
+      return amount;
+    }
   }
 
   /**
