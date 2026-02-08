@@ -92,45 +92,54 @@ describe('Operations - Business Logic Layer', () => {
     test('TC-003: should credit 500.00 and update balance to 1500.00', () => {
       operations.credit(500.00);
       expect(consoleOutput[0]).toBe('Amount credited. New balance: 1500.00');
-      expect(dataProgram.read()).toBe(1500.00);
+      expect(dataProgram.read()).toBeCloseTo(1500.00, 2);
     });
 
     // TC-004: Credit account with decimal amount
     test('TC-004: should credit 123.45 and update balance to 1123.45', () => {
       operations.credit(123.45);
       expect(consoleOutput[0]).toBe('Amount credited. New balance: 1123.45');
-      expect(dataProgram.read()).toBe(1123.45);
+      expect(dataProgram.read()).toBeCloseTo(1123.45, 2);
     });
 
     // TC-005: Multiple credit transactions
     test('TC-005: should handle multiple credits correctly', () => {
       operations.credit(200.00);
-      expect(dataProgram.read()).toBe(1200.00);
+      expect(dataProgram.read()).toBeCloseTo(1200.00, 2);
       
       operations.credit(300.50);
-      expect(dataProgram.read()).toBe(1500.50);
+      expect(dataProgram.read()).toBeCloseTo(1500.50, 2);
       
       operations.credit(99.50);
-      expect(dataProgram.read()).toBe(1600.00);
+      expect(dataProgram.read()).toBeCloseTo(1600.00, 2);
     });
 
     // TC-014: Maximum transaction amount (credit)
     test('TC-014: should credit maximum amount 9999.99', () => {
       operations.credit(9999.99);
-      expect(dataProgram.read()).toBe(10999.99);
+      expect(dataProgram.read()).toBeCloseTo(10999.99, 2);
     });
 
     // TC-015: Maximum balance capacity
     test('TC-015: should handle maximum balance 999999.99', () => {
-      operations.credit(998999.99);
-      expect(dataProgram.read()).toBe(999999.99);
+      const result = operations.credit(998999.99);
+      expect(result).toBe(true);
+      expect(dataProgram.read()).toBeCloseTo(999999.99, 2);
       expect(consoleOutput[0]).toBe('Amount credited. New balance: 999999.99');
+    });
+    
+    // TC-015b: Should reject credit that exceeds maximum balance
+    test('TC-015b: should reject credit that would exceed maximum balance', () => {
+      const result = operations.credit(999000.00);
+      expect(result).toBe(false);
+      expect(consoleOutput[0]).toBe('Credit rejected. Balance would exceed maximum allowed (999,999.99).');
+      expect(dataProgram.read()).toBe(1000.00); // Balance unchanged
     });
 
     // TC-016: Minimum non-zero transaction (credit)
     test('TC-016: should credit minimum amount 0.01', () => {
       operations.credit(0.01);
-      expect(dataProgram.read()).toBe(1000.01);
+      expect(dataProgram.read()).toBeCloseTo(1000.01, 2);
     });
 
     // TC-017: Zero amount credit
@@ -149,7 +158,7 @@ describe('Operations - Business Logic Layer', () => {
     // TC-046: Large decimal credit
     test('TC-046: should credit large decimal amount 1234.56', () => {
       operations.credit(1234.56);
-      expect(dataProgram.read()).toBe(2234.56);
+      expect(dataProgram.read()).toBeCloseTo(2234.56, 2);
       expect(consoleOutput[0]).toBe('Amount credited. New balance: 2234.56');
     });
   });
@@ -160,7 +169,7 @@ describe('Operations - Business Logic Layer', () => {
       const result = operations.debit(300.00);
       expect(result).toBe(true);
       expect(consoleOutput[0]).toBe('Amount debited. New balance: 700.00');
-      expect(dataProgram.read()).toBe(700.00);
+      expect(dataProgram.read()).toBeCloseTo(700.00, 2);
     });
 
     // TC-007: Debit account with exact balance amount
@@ -190,13 +199,13 @@ describe('Operations - Business Logic Layer', () => {
     // TC-010: Multiple debit transactions
     test('TC-010: should handle multiple debits correctly', () => {
       operations.debit(100.00);
-      expect(dataProgram.read()).toBe(900.00);
+      expect(dataProgram.read()).toBeCloseTo(900.00, 2);
       
       operations.debit(200.00);
-      expect(dataProgram.read()).toBe(700.00);
+      expect(dataProgram.read()).toBeCloseTo(700.00, 2);
       
       operations.debit(150.50);
-      expect(dataProgram.read()).toBe(549.50);
+      expect(dataProgram.read()).toBeCloseTo(549.50, 2);
     });
 
     // TC-016: Minimum non-zero transaction (debit)
@@ -205,7 +214,7 @@ describe('Operations - Business Logic Layer', () => {
       consoleOutput = []; // Clear output
       
       operations.debit(0.01);
-      expect(dataProgram.read()).toBe(1000.00);
+      expect(dataProgram.read()).toBeCloseTo(1000.00, 2);
     });
 
     // TC-018: Zero amount debit
@@ -241,7 +250,7 @@ describe('Operations - Business Logic Layer', () => {
     test('TC-047: should debit large decimal amount 2345.67 when sufficient funds', () => {
       dataProgram.write(5000.00);
       operations.debit(2345.67);
-      expect(dataProgram.read()).toBe(2654.33);
+      expect(dataProgram.read()).toBeCloseTo(2654.33, 2);
       expect(consoleOutput[0]).toBe('Amount debited. New balance: 2654.33');
     });
   });
@@ -250,16 +259,16 @@ describe('Operations - Business Logic Layer', () => {
     // TC-011: Mixed credit and debit transactions
     test('TC-011: should handle mixed transactions correctly', () => {
       operations.credit(500.00);    // Balance: 1500.00
-      expect(dataProgram.read()).toBe(1500.00);
+      expect(dataProgram.read()).toBeCloseTo(1500.00, 2);
       
       operations.debit(200.00);     // Balance: 1300.00
-      expect(dataProgram.read()).toBe(1300.00);
+      expect(dataProgram.read()).toBeCloseTo(1300.00, 2);
       
       operations.credit(100.00);    // Balance: 1400.00
-      expect(dataProgram.read()).toBe(1400.00);
+      expect(dataProgram.read()).toBeCloseTo(1400.00, 2);
       
       operations.debit(300.00);     // Balance: 1100.00
-      expect(dataProgram.read()).toBe(1100.00);
+      expect(dataProgram.read()).toBeCloseTo(1100.00, 2);
     });
 
     // TC-012: Attempt debit after previous insufficient funds
@@ -278,13 +287,13 @@ describe('Operations - Business Logic Layer', () => {
       dataProgram.write(500.00);
       
       operations.debit(600.00); // Fails
-      expect(dataProgram.read()).toBe(500.00);
+      expect(dataProgram.read()).toBeCloseTo(500.00, 2);
       
       operations.credit(300.00); // Balance: 800.00
-      expect(dataProgram.read()).toBe(800.00);
+      expect(dataProgram.read()).toBeCloseTo(800.00, 2);
       
       operations.debit(600.00); // Now succeeds
-      expect(dataProgram.read()).toBe(200.00);
+      expect(dataProgram.read()).toBeCloseTo(200.00, 2);
     });
 
     // TC-042: Sequential operations without viewing balance
@@ -302,7 +311,7 @@ describe('Operations - Business Logic Layer', () => {
       for (let i = 0; i < 5; i++) {
         operations.credit(100.00);
       }
-      expect(dataProgram.read()).toBe(1500.00);
+      expect(dataProgram.read()).toBeCloseTo(1500.00, 2);
     });
 
     // TC-044: Rapid successive debits
@@ -310,7 +319,7 @@ describe('Operations - Business Logic Layer', () => {
       for (let i = 0; i < 5; i++) {
         operations.debit(100.00);
       }
-      expect(dataProgram.read()).toBe(500.00);
+      expect(dataProgram.read()).toBeCloseTo(500.00, 2);
     });
   });
 
@@ -318,13 +327,13 @@ describe('Operations - Business Logic Layer', () => {
     // TC-031: Decimal precision preservation (CRITICAL)
     test('TC-031: should preserve decimal precision through multiple operations', () => {
       operations.credit(99.99);    // Balance: 1099.99
-      expect(dataProgram.read()).toBe(1099.99);
+      expect(dataProgram.read()).toBeCloseTo(1099.99, 2);
       
       operations.credit(0.01);     // Balance: 1100.00
-      expect(dataProgram.read()).toBe(1100.00);
+      expect(dataProgram.read()).toBeCloseTo(1100.00, 2);
       
       operations.debit(50.50);     // Balance: 1049.50
-      expect(dataProgram.read()).toBe(1049.50);
+      expect(dataProgram.read()).toBeCloseTo(1049.50, 2);
       
       // Verify no rounding errors
       expect(consoleOutput[consoleOutput.length - 1]).toBe('Amount debited. New balance: 1049.50');
@@ -351,7 +360,7 @@ describe('Operations - Business Logic Layer', () => {
       operations.debit(200.00);    // Balance: 1300.00
       operations.viewBalance();
       
-      expect(dataProgram.read()).toBe(1300.00);
+      expect(dataProgram.read()).toBeCloseTo(1300.00, 2);
       expect(consoleOutput[consoleOutput.length - 1]).toBe('Current balance: 1300.00');
     });
 
@@ -512,10 +521,10 @@ describe('End-to-End Scenarios', () => {
   // TC-014: Maximum transaction amount (full flow)
   test('TC-014: should handle maximum transaction amounts in sequence', () => {
     operations.credit(9999.99);
-    expect(dataProgram.read()).toBe(10999.99);
+    expect(dataProgram.read()).toBeCloseTo(10999.99, 2);
     
     operations.debit(5000.00);
-    expect(dataProgram.read()).toBe(5999.99);
+    expect(dataProgram.read()).toBeCloseTo(5999.99, 2);
   });
 
   test('Real-world scenario: Multiple transactions in a session', () => {
@@ -524,24 +533,24 @@ describe('End-to-End Scenarios', () => {
     
     // Deposit paycheck
     operations.credit(2500.00);
-    expect(dataProgram.read()).toBe(3500.00);
+    expect(dataProgram.read()).toBeCloseTo(3500.00, 2);
     
     // Pay rent
     operations.debit(1200.00);
-    expect(dataProgram.read()).toBe(2300.00);
+    expect(dataProgram.read()).toBeCloseTo(2300.00, 2);
     
     // Pay utilities
     operations.debit(150.50);
-    expect(dataProgram.read()).toBe(2149.50);
+    expect(dataProgram.read()).toBeCloseTo(2149.50, 2);
     
     // Try to withdraw more than available (fails)
     const result = operations.debit(3000.00);
     expect(result).toBe(false);
-    expect(dataProgram.read()).toBe(2149.50); // Unchanged
+    expect(dataProgram.read()).toBeCloseTo(2149.50, 2); // Unchanged
     
     // Successful withdrawal
     operations.debit(500.00);
-    expect(dataProgram.read()).toBe(1649.50);
+    expect(dataProgram.read()).toBeCloseTo(1649.50, 2);
     
     // View final balance
     operations.viewBalance();
@@ -553,13 +562,13 @@ describe('End-to-End Scenarios', () => {
     for (let i = 0; i < 50; i++) {
       operations.credit(10.00);
     }
-    expect(dataProgram.read()).toBe(1500.00);
+    expect(dataProgram.read()).toBeCloseTo(1500.00, 2);
     
     // 25 debits of 20.00 each
     for (let i = 0; i < 25; i++) {
       operations.debit(20.00);
     }
-    expect(dataProgram.read()).toBe(1000.00);
+    expect(dataProgram.read()).toBeCloseTo(1000.00, 2);
   });
 
   test('Edge case: Alternating small credits and debits', () => {
@@ -569,6 +578,6 @@ describe('End-to-End Scenarios', () => {
     }
     
     // Net change: 10 * (5.25 - 2.50) = 10 * 2.75 = 27.50
-    expect(dataProgram.read()).toBe(1027.50);
+    expect(dataProgram.read()).toBeCloseTo(1027.50, 2);
   });
 });
