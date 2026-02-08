@@ -145,9 +145,9 @@ class MainProgram {
           console.log('Invalid amount. Please enter a valid positive number.');
           this.promptForAmount(promptMessage).then(resolve);
         } else {
-          // Business Rule: Maximum amount PIC 9(6)V99 = 999999.99
-          if (amount > 999999.99) {
-            console.log('Amount exceeds maximum allowed (999999.99).');
+          // Business Rule: Maximum transaction amount per docs/README.md and TC-014 = 9,999.99
+          if (amount > 9999.99) {
+            console.log('Amount exceeds maximum allowed (9,999.99).');
             this.promptForAmount(promptMessage).then(resolve);
           } else {
             resolve(amount);
